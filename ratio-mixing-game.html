@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>飲料調配遊戲：理解比例與比值</title>
+    <style>
+        body {
+            font-family: "Microsoft JhengHei", Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        h1 {
+            color: #8B4513;
+            text-align: center;
+        }
+        
+        .game-container {
+            background-color: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+        
+        .instructions {
+            background-color: #f8f9fa;
+            border-left: 4px solid #8B4513;
+            padding: 10px 15px;
+            margin-bottom: 20px;
+        }
+        
+        .drink-display {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 20px;
+        }
+        
+        .drink-container {
+            width: 200px;
+            text-align: center;
+        }
+        
+        .glass {
+            width: 120px;
+            height: 200px;
+            margin: 0 auto;
+            background-color: rgba(255, 255, 255, 0.5);
+            border: 2px solid #333;
+            border-radius: 0 0 20px 20px;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .liquid {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            bottom: 0;
+            transition: background-color 0.5s ease;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+        
+        .control-panel {
+            width: 200px;
+            padding: 10px;
+            background-color: #f8f8f8;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+        
+        button {
+            background-color: #8B4513;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            margin: 5px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #6b3100;
+        }
+        
+        .reset-btn {
+            background-color: #d9534f;
+        }
+        
+        .reset-btn:hover {
+            background-color: #c9302c;
+        }
+        
+        .check-btn {
+            background-color: #5cb85c;
+        }
+        
+        .check-btn:hover {
+            background-color: #4cae4c;
+        }
+        
+        .ratio-display {
+            font-size: 18px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        
+        .feedback {
+            text-align: center;
+            font-weight: bold;
+            min-height: 50px;
+            padding: 10px;
+            margin-top: 20px;
+            border-radius: 5px;
+        }
+        
+        .success {
+            background-color: #dff0d8;
+            color: #3c763d;
+        }
+        
+        .try-again {
+            background-color: #f2dede;
+            color: #a94442;
+        }
+        
+        .hint {
+            background-color: #d9edf7;
+            color: #31708f;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .ratio-question {
+            font-size: 18px;
+            margin: 20px 0;
+            padding: 10px;
+            background-color: #f0f0f0;
+            border-radius: 5px;
+            text-align: center;
+        }
+        
+        @media (max-width: 600px) {
+            .drink-display {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .drink-container {
+                margin-bottom: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>飲料調配遊戲：理解比例與比值</h1>
+    
+    <div class="game-container">
+        <div class="instructions">
+            <h2>遊戲說明</h2>
+            <p>這個遊戲將幫助你理解比值和比例的概念。左邊杯子顯示標準比例的飲料，右邊是你要調配的杯子。</p>
+            <p>透過添加紅茶和牛奶，讓右邊杯子的顏色與左邊一致，同時保持相同的比例關係。</p>
+            <p>例如：如果左邊杯子的紅茶和牛奶比例是 2:8，而右邊杯子已有 6 杯紅茶，你需要添加多少杯牛奶才能保持同樣的比例？</p>
+        </div>
+        
+        <div class="ratio-question" id="current-question">
+            問題：左邊杯子的紅茶和牛奶比例是 <span id="target-ratio">2:8</span>，右邊杯子已有 <span id="current-tea">6</span> 杯紅茶，需要添加多少杯牛奶才能保持同樣的比例？
+        </div>
+        
+        <div class="drink-display">
+            <div class="drink-container">
+                <h3>標準比例杯</h3>
+                <div class="glass">
+                    <div class="liquid" id="target-liquid"></div>
+                </div>
+                <div class="ratio-display">
+                    紅茶：<span id="target-tea">2</span> 杯<br>
+                    牛奶：<span id="target-milk">8</span> 杯<br>
+                    比例：<span id="target-ratio-display">2:8</span>
+                </div>
+            </div>
+            
+            <div class="drink-container">
+                <h3>你的調配杯</h3>
+                <div class="glass">
+                    <div class="liquid" id="user-liquid"></div>
+                </div>
+                <div class="ratio-display">
+                    紅茶：<span id="user-tea">6</span> 杯<br>
+                    牛奶：<span id="user-milk">0</span> 杯<br>
+                    比例：<span id="user-ratio">6:0</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <div class="control-panel">
+                <h3>調配控制</h3>
+                <button id="add-tea">添加紅茶 (+1)</button>
+                <button id="add-milk">添加牛奶 (+1)</button>
+                <button id="add-milk-5">添加牛奶 (+5)</button>
+                <button id="remove-tea" class="reset-btn">減少紅茶 (-1)</button>
+                <button id="remove-milk" class="reset-btn">減少牛奶 (-1)</button>
+            </div>
+            
+            <div class="control-panel">
+                <h3>遊戲控制</h3>
+                <button id="check-ratio" class="check-btn">檢查比例</button>
+                <button id="get-hint">提示</button>
+                <button id="reset-game" class="reset-btn">重設遊戲</button>
+                <button id="new-challenge" class="check-btn">新挑戰</button>
+            </div>
+        </div>
+        
+        <div class="feedback" id="feedback"></div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 取得元素
+            const targetLiquid = document.getElementById('target-liquid');
+            const userLiquid = document.getElementById('user-liquid');
+            const targetTeaEl = document.getElementById('target-tea');
+            const targetMilkEl = document.getElementById('target-milk');
+            const targetRatioEl = document.getElementById('target-ratio');
+            const targetRatioDisplayEl = document.getElementById('target-ratio-display');
+            const userTeaEl = document.getElementById('user-tea');
+            const userMilkEl = document.getElementById('user-milk');
+            const userRatioEl = document.getElementById('user-ratio');
+            const feedbackEl = document.getElementById('feedback');
+            const currentTeaEl = document.getElementById('current-tea');
+            
+            // 按鈕
+            const addTeaBtn = document.getElementById('add-tea');
+            const addMilkBtn = document.getElementById('add-milk');
+            const addMilk5Btn = document.getElementById('add-milk-5');
+            const removeTeaBtn = document.getElementById('remove-tea');
+            const removeMilkBtn = document.getElementById('remove-milk');
+            const checkRatioBtn = document.getElementById('check-ratio');
+            const getHintBtn = document.getElementById('get-hint');
+            const resetGameBtn = document.getElementById('reset-game');
+            const newChallengeBtn = document.getElementById('new-challenge');
+            
+            // 初始值
+            let targetTea = 2;
+            let targetMilk = 8;
+            let userTea = 6;
+            let userMilk = 0;
+            
+            // 更新顯示
+            function updateDisplay() {
+                // 更新數字
+                targetTeaEl.textContent = targetTea;
+                targetMilkEl.textContent = targetMilk;
+                targetRatioDisplayEl.textContent = `${targetTea}:${targetMilk}`;
+                targetRatioEl.textContent = `${targetTea}:${targetMilk}`;
+                userTeaEl.textContent = userTea;
+                userMilkEl.textContent = userMilk;
+                userRatioEl.textContent = `${userTea}:${userMilk}`;
+                currentTeaEl.textContent = userTea;
+                
+                // 計算顏色 - 使用RGB值模擬紅茶(褐色)和牛奶(白色)混合
+                const calculateColor = (tea, milk) => {
+                    if (tea + milk === 0) return 'transparent';
+                    
+                    // 紅茶是褐色 (139, 69, 19)，牛奶是白色 (255, 255, 255)
+                    const teaRatio = tea / (tea + milk);
+                    const milkRatio = milk / (tea + milk);
+                    
+                    const r = Math.round((139 * teaRatio) + (255 * milkRatio));
+                    const g = Math.round((69 * teaRatio) + (255 * milkRatio));
+                    const b = Math.round((19 * teaRatio) + (255 * milkRatio));
+                    
+                    return `rgb(${r}, ${g}, ${b})`;
+                };
+                
+                // 設置顏色
+                targetLiquid.style.backgroundColor = calculateColor(targetTea, targetMilk);
+                userLiquid.style.backgroundColor = calculateColor(userTea, userMilk);
+            }
+            
+            // 檢查比例是否相同
+            function checkRatio() {
+                // 將比例簡化為最簡形式後比較
+                function gcd(a, b) {
+                    return b === 0 ? a : gcd(b, a % b);
+                }
+                
+                // 處理零的情況
+                if (targetMilk === 0 && userMilk === 0) {
+                    return targetTea > 0 && userTea > 0;
+                }
+                if (targetTea === 0 && userTea === 0) {
+                    return targetMilk > 0 && userMilk > 0;
+                }
+                if (targetTea === 0 || targetMilk === 0 || userTea === 0 || userMilk === 0) {
+                    return false;
+                }
+                
+                // 計算比值
+                const targetRatio = targetTea / targetMilk;
+                const userRatio = userTea / userMilk;
+                
+                // 允許一點誤差範圍
+                return Math.abs(targetRatio - userRatio) < 0.001;
+            }
+            
+            // 按鈕事件處理
+            addTeaBtn.addEventListener('click', function() {
+                userTea++;
+                updateDisplay();
+                feedbackEl.className = 'feedback';
+                feedbackEl.textContent = '';
+            });
+            
+            addMilkBtn.addEventListener('click', function() {
+                userMilk++;
+                updateDisplay();
+                feedbackEl.className = 'feedback';
+                feedbackEl.textContent = '';
+            });
+            
+            addMilk5Btn.addEventListener('click', function() {
+                userMilk += 5;
+                updateDisplay();
+                feedbackEl.className = 'feedback';
+                feedbackEl.textContent = '';
+            });
+            
+            removeTeaBtn.addEventListener('click', function() {
+                if (userTea > 0) {
+                    userTea--;
+                    updateDisplay();
+                    feedbackEl.className = 'feedback';
+                    feedbackEl.textContent = '';
+                }
+            });
+            
+            removeMilkBtn.addEventListener('click', function() {
+                if (userMilk > 0) {
+                    userMilk--;
+                    updateDisplay();
+                    feedbackEl.className = 'feedback';
+                    feedbackEl.textContent = '';
+                }
+            });
+            
+            checkRatioBtn.addEventListener('click', function() {
+                if (checkRatio()) {
+                    feedbackEl.className = 'feedback success';
+                    feedbackEl.textContent = '太棒了！你的比例正確！紅茶和牛奶的比值與標準杯相同。';
+                } else {
+                    feedbackEl.className = 'feedback try-again';
+                    feedbackEl.textContent = '再試一次！你的比例還不正確。提示：思考 ' + targetTea + ':' + targetMilk + ' 的比例關係。';
+                }
+            });
+            
+            getHintBtn.addEventListener('click', function() {
+                const correctMilk = (userTea * targetMilk) / targetTea;
+                feedbackEl.className = 'feedback hint';
+                feedbackEl.textContent = `提示：如果標準杯的比例是 ${targetTea}:${targetMilk}，那麼對於 ${userTea} 杯紅茶，你需要 ${correctMilk} 杯牛奶。`;
+            });
+            
+            resetGameBtn.addEventListener('click', function() {
+                userTea = 6;
+                userMilk = 0;
+                updateDisplay();
+                feedbackEl.className = 'feedback';
+                feedbackEl.textContent = '';
+            });
+            
+            newChallengeBtn.addEventListener('click', function() {
+                // 生成新的挑戰
+                targetTea = Math.floor(Math.random() * 5) + 1; // 1-5
+                targetMilk = Math.floor(Math.random() * 10) + 1; // 1-10
+                userTea = Math.floor(Math.random() * 8) + 3; // 3-10
+                userMilk = 0;
+                
+                updateDisplay();
+                feedbackEl.className = 'feedback';
+                feedbackEl.textContent = '新挑戰已生成！嘗試保持相同的比例。';
+            });
+            
+            // 初始化顯示
+            updateDisplay();
+        });
+    </script>
+</body>
+</html>
